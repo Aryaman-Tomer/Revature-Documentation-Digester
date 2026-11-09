@@ -1,16 +1,26 @@
 [project]
-name = "revature-documentation-digester"
+name = "documentation-digester"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 authors = [
-    { name = "Thomas ☻", email = "53582981+tthn0@users.noreply.github.com" }
+    { name = "Thomas ☻", email = "53582981+tthn0@users.noreply.github.com" },
 ]
-requires-python = ">=3.15"
-dependencies = []
+requires-python = ">=3.14"
+dependencies = [
+    "docx2txt>=0.9",
+    "fastapi>=0.162.2",
+    "langchain-chroma>=1.1.0",
+    "langchain-community>=0.4.2",
+    "langchain-text-splitters>=1.1.3",
+    "pypdf>=7.0.0",
+    "python-dotenv>=1.2.4",
+    "python-multipart>=0.0.33",
+    "uvicorn>=0.54.0",
+]
 
 [project.scripts]
-revature-documentation-digester = "revature_documentation_digester:main"
+start = "documentation_digester:main"
 
 [build-system]
 requires = ["uv_build>=0.12.3,<0.13.0"]
