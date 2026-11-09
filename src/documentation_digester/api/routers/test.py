@@ -1,11 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, Request
+from langchain_core.language_models import BaseChatModel
 
-router = APIRouter(prefix="/test", tags=["test"])
+router = APIRouter(prefix="/ask", tags=["test"])
 
 
-# query param: http://localhost:8000/test?name=Test
+def get_llm(request: Request) -> BaseChatModel:
+    return request.app.state.llm
+
+
 @router.get("")
-def get_students_by_name(
-    name: str = Query(min_length=1, max_length=100),
+def prompt(
+    prompt: str = Query(min_length=1, max_length=100), llm=Depends(get_llm)
 ) -> str:
-    return "Hello"
+    return llm.invoke(prompt).content
