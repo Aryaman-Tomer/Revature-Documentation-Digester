@@ -4,8 +4,9 @@ from fastapi import FastAPI
 from langchain_chroma import Chroma
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 
-from documentation_digester.api.routers.test import router
-from documentation_digester.settings import settings
+from documentation_digester.api.routers.documents import router as documents_router
+from documentation_digester.api.routers.test import router as test_router
+from documentation_digester.config.settings import settings
 
 
 @asynccontextmanager
@@ -24,7 +25,7 @@ async def lifespan(app: FastAPI):
     app.state.vector_store = Chroma(
         collection_name="documents",
         embedding_function=app.state.embeddings,
-        persist_directory=settings.CHROMA_DIRECTORY,
+        persist_directory=str(settings.CHROMA_DIRECTORY),
     )
 
     yield
@@ -36,4 +37,5 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-app.include_router(router)
+app.include_router(test_router)
+app.include_router(documents_router)

@@ -1,7 +1,10 @@
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 from pydantic import BaseModel
+
+from documentation_digester.config.paths import PATHS
 
 load_dotenv()
 
@@ -10,7 +13,7 @@ class Settings(BaseModel):
     OLLAMA_BASE_URL: str
     OLLAMA_LLM_MODEL: str
     OLLAMA_EMBEDDING_MODEL: str = "qwen3-embedding:0.6b"
-    CHROMA_DIRECTORY: str = "./data/chroma"
+    CHROMA_DIRECTORY: Path = PATHS.SRC_DIRECTORY / "data" / "chroma"
 
 
 settings = Settings(
