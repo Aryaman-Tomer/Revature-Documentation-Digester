@@ -4,18 +4,19 @@
 
 :root {
   color-scheme: light;
+  /* Godot palette: logo blue #478cbf, logo gray #414042, editor dark-blue base */
   --bg: #ffffff;
-  --surface: #f4f4f5;
-  --text: #18181b;
-  --primary: #4f46e5;
+  --surface: #eef2f7;
+  --text: #414042;
+  --primary: #478cbf;
 }
 
 :root.dark {
   color-scheme: dark;
-  --bg: #0f0f11;
-  --surface: #1c1c21;
-  --text: #f4f4f5;
-  --primary: #818cf8;
+  --bg: #202531;
+  --surface: #2a303e;
+  --text: #e0e0e0;
+  --primary: #478cbf;
 }
 
 body {
