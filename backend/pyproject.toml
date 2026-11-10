@@ -1,14 +1,11 @@
 [project]
 name = "documentation-digester"
 version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
 authors = [
     { name = "Thomas ☻", email = "53582981+tthn0@users.noreply.github.com" },
 ]
 requires-python = ">=3.14"
 dependencies = [
-    "docx2txt>=0.9",
     "fastapi>=0.162.2",
     "langchain-chroma>=1.1.0",
     "langchain-community>=0.4.2",

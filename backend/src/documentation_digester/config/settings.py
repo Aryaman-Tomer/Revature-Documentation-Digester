@@ -12,8 +12,11 @@ load_dotenv()
 class Settings(BaseModel):
     OLLAMA_BASE_URL: str
     OLLAMA_LLM_MODEL: str
-    OLLAMA_EMBEDDING_MODEL: str = "qwen3-embedding:0.6b"
-    CHROMA_DIRECTORY: Path = PATHS.SRC_DIRECTORY / "data" / "chroma"
+    OLLAMA_EMBEDDING_MODEL: str
+    CHROMA_DIRECTORY: Path = PATHS.ROOT_DIRECTORY / "data" / "chroma"
+    SUPPORTED_EXTENSIONS: set[str] = {".txt", ".md", ".pdf"}
+    CHUNK_SIZE: int = 1000
+    CHUNK_OVERLAP: int = 200
 
 
 settings = Settings(

@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
 from langchain_chroma import Chroma
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 
@@ -14,14 +15,14 @@ async def lifespan(app: FastAPI):
         model=settings.OLLAMA_LLM_MODEL,
         base_url=settings.OLLAMA_BASE_URL,
         temperature=0,
-        keep_alive="30m",
+        keep_alive="10m",
     )
     app.state.embeddings = OllamaEmbeddings(
         model=settings.OLLAMA_EMBEDDING_MODEL,
         base_url=settings.OLLAMA_BASE_URL,
-        keep_alive=1800,
+        keep_alive=600,
     )
-    app.state.vector_store = Chroma(
+    app.state.chroma = Chroma(
         collection_name="documents",
         embedding_function=app.state.embeddings,
         persist_directory=str(settings.CHROMA_DIRECTORY),
@@ -31,9 +32,16 @@ async def lifespan(app: FastAPI):
 
     app.state.llm = None
     app.state.embeddings = None
-    app.state.vector_store = None
+    app.state.chroma = None
 
 
 app = FastAPI(lifespan=lifespan)
-
 app.include_router(documents_router)
+
+
+@app.exception_handler(Exception)
+async def exception_handler(request: Request, e: Exception) -> JSONResponse:
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": f"Internal server error: {e!s}"},
+    )
