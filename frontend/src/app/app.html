@@ -1,0 +1,184 @@
+<main
+  class="relative transition-[padding] duration-300 flex flex-col h-screen items-center gap-6 px-4 py-17 bg-(--bg) text-(--text)"
+  [class.justify-center]="!messages().length"
+  [style.padding-left.rem]="historyOpen() ? 17 : null"
+>
+  <div
+    class="absolute z-10 left-2 top-2 flex flex-row gap-x-6 p-3 justify-between bg-(--surface) rounded-xl"
+  >
+    <button title="Chats" class="cursor-pointer" (click)="historyOpen.set(!historyOpen())">
+      <ng-icon name="remixWindow2Line" />
+    </button>
+    <button title="New Chat" class="cursor-pointer" (click)="newChat()">
+      <ng-icon name="lucidePlus" />
+    </button>
+  </div>
+  <aside
+    class="transition-transform duration-300 fixed z-0 left-0 top-0 h-full w-64 pt-20 px-2 overflow-y-auto bg-(--surface) border-r border-(--text)/15"
+    [class.-translate-x-full]="!historyOpen()"
+    [attr.inert]="historyOpen() ? null : ''"
+  >
+    @for (c of chats(); track c.id) {
+      <div class="flex items-center rounded-lg hover:bg-(--text)/10">
+        <button
+          (click)="openChat(c.id, c.messages)"
+          class="flex-1 min-w-0 truncate px-3 py-2 text-left cursor-pointer"
+          [class.font-semibold]="c.id === chatId"
+        >
+          {{ c.title }}
+        </button>
+        <button
+          (click)="deleteChat(c.id)"
+          title="Delete"
+          aria-label="Delete chat"
+          class="px-3 py-2 text-(--text)/50 hover:text-(--text) cursor-pointer"
+        >
+          <ng-icon name="remixDeleteBinLine" />
+        </button>
+      </div>
+    } @empty {
+      <p class="px-3 text-(--text)/50">No chats yet</p>
+    }
+  </aside>
+  <div
+    class="flex flex-col gap-6 w-full max-w-2xl min-h-0"
+    [class.flex-1]="messages().length"
+    [class]="messages().length ? 'bg-(--surface)' : ''"
+    [class.rounded-3xl]="messages().length"
+    [class.p-4]="messages().length"
+  >
+    @if (messages().length) {
+      <section #chat class="flex-1 w-full max-w-2xl overflow-y-auto pt-6 space-y-6 scrollbar-none">
+        @for (m of messages(); track $index; let mi = $index) {
+          <div class="group ml-auto w-fit max-w-[85%]">
+            <p class="rounded-2xl bg-(--text)/10 px-4 py-2 whitespace-pre-wrap">{{ m.question }}</p>
+            <div
+              class="flex justify-end gap-3 pt-1 text-(--text)/50 opacity-0 pr-2 group-hover:opacity-100 transition"
+            >
+              <button
+                title="Retry"
+                aria-label="Retry"
+                (click)="retry(mi)"
+                class="hover:text-(--text)"
+              >
+                <ng-icon name="lucideRotateCcw" />
+              </button>
+              <button
+                title="Edit"
+                aria-label="Edit"
+                (click)="box.value = text = m.question; box.focus()"
+                class="hover:text-(--text)"
+              >
+                <ng-icon name="phosphorPencilSimpleBold" />
+              </button>
+              <button
+                title="Copy"
+                aria-label="Copy"
+                (click)="navigator.clipboard.writeText(m.question)"
+                class="hover:text-(--text)"
+              >
+                <ng-icon name="phosphorCopyBold" />
+              </button>
+            </div>
+          </div>
+          @if (m.answer) {
+            <div
+              class="max-w-[85%] w-fit rounded-2xl bg-(--bg) border border-(--text)/15 px-4 py-3 space-y-3"
+            >
+              <p class="whitespace-pre-wrap">{{ m.answer.response }}</p>
+              <div class="flex flex-wrap gap-2">
+                @for (s of m.answer.sources; track $index; let i = $index) {
+                  <div
+                    tabindex="0"
+                    (mouseenter)="pop.showPopover()"
+                    (mouseleave)="pop.hidePopover()"
+                    (focus)="pop.showPopover()"
+                    (blur)="pop.hidePopover()"
+                  >
+                    <span
+                      [style.anchor-name]="'--s' + mi + '-' + i"
+                      class="block rounded-full border border-(--text)/25 bg-(--surface) px-3 py-0.5 text-xs cursor-default"
+                    >
+                      {{ s.filename.length > 15 ? s.filename.slice(0, 15) + '...' : s.filename }}
+                      - {{ s.chunk_index }}
+                    </span>
+                    <div
+                      #pop
+                      popover="manual"
+                      [style.position-anchor]="'--s' + mi + '-' + i"
+                      class="src-pop w-72 max-h-60 overflow-y-auto scrollbar-none rounded-xl border border-(--text)/15 bg-(--surface) text-(--text) p-3 text-sm shadow-lg"
+                    >
+                      <p class="font-semibold">{{ s.filename }} · chunk {{ s.chunk_index }}</p>
+                      <p class="text-(--text)/70">{{ s.content }}</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          } @else if (m.error) {
+            <p
+              role="alert"
+              class="max-w-[85%] w-fit rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-red-600 dark:text-red-400"
+            >
+              {{ m.error }}
+            </p>
+          } @else if (loading()) {
+            <div class="w-fit rounded-2xl bg-(--bg) border border-(--text)/15 px-4 py-3">
+              <div class="loaderInLine"></div>
+            </div>
+          }
+        }
+      </section>
+    } @else {
+      <h1 class="text-3xl sm:text-4xl font-serif text-center">Welcome Back</h1>
+    }
+    <div
+      class="relative w-full max-w-2xl bg-(--bg) border border-(--text)/25 rounded-3xl shadow-sm focus-within:shadow-md focus-within:border-(--text)/40 transition"
+    >
+      <textarea
+        #box
+        rows="3"
+        placeholder="How can I help you today?"
+        (input)="onInput($event)"
+        (keydown.enter)="onEnter($event, box)"
+        class="block w-full field-sizing-content overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden resize-none bg-transparent pt-4 pb-14 mb-15 px-5 min-h-32 max-h-80 placeholder:text-(--text)/50 border-0 focus:outline-none focus:ring-0"
+      ></textarea>
+      <input #picker type="file" accept=".txt,text/plain" hidden (change)="pick(picker)" />
+      <button
+        (click)="picker.click()"
+        [disabled]="loading()"
+        aria-label="Upload text file"
+        title="Upload text file"
+        class="absolute bottom-3 left-3 grid place-items-center size-9 rounded-full bg-(--text) text-(--bg) hover:bg-(--text)/70 transition"
+      >
+        <ng-icon name="matDocsOutline"></ng-icon>
+      </button>
+      @if (file()) {
+        <span class="absolute bottom-5 left-14 max-w-48 truncate text-sm text-(--text)/50">{{
+          file()?.name
+        }}</span>
+      }
+      <button
+        (click)="submit(); box.value = ''"
+        [disabled]="loading()"
+        aria-label="Send"
+        class="absolute bottom-3 right-3 grid place-items-center size-9 rounded-full bg-(--text) text-(--bg) hover:bg-(--text)/70 transition"
+      >
+        @if (loading()) {
+          <div class="loader h-5! bg-(--bg)!"></div>
+        } @else {
+          <ng-icon name="remixArrowLeftUpLongLine" />
+        }
+      </button>
+    </div>
+  </div>
+  <button
+    (click)="toggleTheme($event)"
+    aria-label="Toggle theme"
+    class="fixed top-4 right-4 grid place-items-center size-11 rounded-full border border-(--text)/25 bg-(--surface) text-(--text) hover:bg-(--text)/10 transition"
+  >
+    <ng-icon [name]="theme.isDark() ? 'lucideSun' : 'lucideMoon'" />
+  </button>
+</main>
+
+<router-outlet />
