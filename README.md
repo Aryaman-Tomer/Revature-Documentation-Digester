@@ -19,3 +19,5 @@ ollama pull nomic-embed-text:latest
 ollama pull qwen2.5:1.5b
 uv run start
 ```
+
+docker compose up --watch
