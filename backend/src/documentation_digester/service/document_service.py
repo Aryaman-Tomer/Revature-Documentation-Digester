@@ -22,6 +22,12 @@ class UploadSuccess(TypedDict):
     chunks_created: int
 
 
+class DocumentSummary(TypedDict):
+    document_id: str
+    filename: str
+    total_chunks: int
+
+
 class DocumentService:
     def __init__(self, chroma: Chroma):
         self.chroma = chroma
@@ -30,6 +36,21 @@ class DocumentService:
             chunk_overlap=settings.CHUNK_OVERLAP,
             add_start_index=True,
         )
+
+    def delete_file(self, file_name: str) -> bool:
+        result = self.chroma.get(where={"filename": file_name})
+        document_ids = result.get("ids", [])
+
+        if document_ids:
+            self.chroma.delete(ids=document_ids)
+            return True
+        else:
+            return False
+
+    def get_all_files(self) -> set[str]:
+        metadatas = self.chroma.get(include=["metadatas"])["metadatas"]
+        unique_files = {m["filename"] for m in metadatas}
+        return unique_files
 
     def upload_document(self, file: UploadFile) -> UploadSuccess:
         filename = os.path.basename(file.filename or "")
@@ -50,7 +71,7 @@ class DocumentService:
                 shutil.copyfileobj(file.file, temp_file)
 
             match extension:
-                case ".txt" | ".md":
+                case ".txt" | ".rst" | ".md":
                     loader = TextLoader(temp_path, encoding="utf-8")
                 case ".pdf":
                     loader = PyPDFLoader(temp_path)
