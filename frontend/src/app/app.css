@@ -11,7 +11,7 @@
   height: 70px;
   aspect-ratio: 1;
   animation: l9 2s infinite linear;
-  background: #3a86ff;
+  background: var(--primary);
 }
 @keyframes l9 {
   0%,
