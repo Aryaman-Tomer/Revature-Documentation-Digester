@@ -84,3 +84,6 @@ $RECYCLE.BIN/
 *.lnk
 # Local secrets
 .env
+
+# Local Chroma database
+backend/data/chroma/
