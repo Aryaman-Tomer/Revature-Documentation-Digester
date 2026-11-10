@@ -1,0 +1,34 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import 'tailwindcss';
+
+:root {
+  color-scheme: light;
+  --bg: #ffffff;
+  --surface: #f4f4f5;
+  --text: #18181b;
+  --primary: #4f46e5;
+}
+
+:root.dark {
+  color-scheme: dark;
+  --bg: #0f0f11;
+  --surface: #1c1c21;
+  --text: #f4f4f5;
+  --primary: #818cf8;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+/* Theme wave: JS animates ::view-transition-new(root) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}

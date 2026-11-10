@@ -6,7 +6,8 @@
 
 ```bash
 cd frontend
-# Todo
+npm install
+npm start
 ```
 
 ### Backend
