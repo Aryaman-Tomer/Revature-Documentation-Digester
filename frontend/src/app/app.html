@@ -108,7 +108,10 @@
                       [style.position-anchor]="'--s' + mi + '-' + i"
                       class="src-pop w-72 max-h-60 overflow-y-auto scrollbar-none rounded-xl border border-(--text)/15 bg-(--surface) text-(--text) p-3 text-sm shadow-lg"
                     >
-                      <p class="font-semibold">{{ s.filename }} · chunk {{ s.chunk_index }}</p>
+                      <p class="font-semibold">
+                        {{ s.filename }} - chunk {{ s.chunk_index
+                        }}{{ s.page === 'N/A' ? '' : ' - Page ' + s.page }}
+                      </p>
                       <p class="text-(--text)/70">{{ s.content }}</p>
                     </div>
                   </div>
@@ -123,8 +126,11 @@
               {{ m.error }}
             </p>
           } @else if (loading()) {
-            <div class="w-fit rounded-2xl bg-(--bg) border border-(--text)/15 px-4 py-3">
-              <div class="loaderInLine"></div>
+            <div
+              class="flex items-center gap-3 w-fit rounded-2xl bg-(--bg) border border-(--text)/15 px-4 py-3"
+            >
+              <img src="godot.gif" alt="" class="size-24" />
+              <span class="min-w-48 after:content-['|'] after:animate-pulse">{{ status() }}</span>
             </div>
           }
         }
@@ -143,7 +149,13 @@
         (keydown.enter)="onEnter($event, box)"
         class="block w-full field-sizing-content overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden resize-none bg-transparent pt-4 pb-14 mb-15 px-5 min-h-32 max-h-80 placeholder:text-(--text)/50 border-0 focus:outline-none focus:ring-0"
       ></textarea>
-      <input #picker type="file" accept=".txt,text/plain" hidden (change)="pick(picker)" />
+      <input
+        #picker
+        type="file"
+        accept=".txt,text/plain,.pdf,application/pdf,.md,.markdown,text/markdown,.rst"
+        hidden
+        (change)="pick(picker)"
+      />
       <button
         (click)="picker.click()"
         [disabled]="loading()"

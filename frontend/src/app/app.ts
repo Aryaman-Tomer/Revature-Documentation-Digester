@@ -33,6 +33,28 @@ interface Chat {
   messages: QA[];
 }
 
+const PHRASES = [
+  'Loading Shaders',
+  'Downloading Battle Pass',
+  'Summoning Bosses',
+  'Loading Skins',
+  'Generating the Terrain',
+  'Selecting Map',
+  'Forming Squad',
+  'Respawning NPCs',
+  'Compiling Loot Tables',
+  'Matchmaking',
+  'Initializing Physics Engine',
+  'Bypassing In-Game Purchases',
+  'Hacking the Mainframe',
+  'Joining Party',
+  'Downloading More RAM',
+  'Emulating Console',
+  'Clearing Inventory',
+  'Clocking Gauge',
+  'Calculating Pity',
+];
+
 const readChats = (): Chat[] => {
   try {
     const chats = JSON.parse(localStorage.getItem('chats') ?? '[]');
@@ -83,8 +105,34 @@ export class App {
   loading = signal(false);
   chat = viewChild<ElementRef<HTMLElement>>('chat');
 
+  status = signal('');
+
   constructor() {
     sessionStorage.setItem('chatId', this.chatId);
+    // typewriter: type a phrase left to right, hold, erase right to left, next phrase
+    effect((onCleanup) => {
+      if (!this.loading()) return;
+      let i = Math.floor(Math.random() * PHRASES.length),
+        n = 0,
+        dir = 1,
+        hold = 0;
+      const t = setInterval(() => {
+        if (hold-- > 0) return;
+        n += dir;
+        const phrase = `${PHRASES[i]}...`;
+        this.status.set(phrase.slice(0, n));
+        if (n === phrase.length) [dir, hold] = [-1, 12];
+        else if (n === 0)
+          [dir, i] = [
+            1,
+            (i + 1 + Math.floor(Math.random() * (PHRASES.length - 1))) % PHRASES.length,
+          ];
+      }, 70);
+      onCleanup(() => {
+        clearInterval(t);
+        this.status.set('');
+      });
+    });
     effect(() => {
       // only answered turns are stored: errors and in-flight questions are transient
       const messages = this.messages()
