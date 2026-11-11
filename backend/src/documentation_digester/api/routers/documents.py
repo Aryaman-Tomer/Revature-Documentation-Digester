@@ -1,6 +1,9 @@
 from typing import Annotated
 
+from collections.abc import AsyncIterable
+
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
+from fastapi.sse import EventSourceResponse, ServerSentEvent
 from langchain_chroma import Chroma
 from langchain_core.language_models import BaseChatModel
 from langchain_experimental.text_splitter import SemanticChunker
@@ -85,6 +88,15 @@ def ask_questions_about_existing_documents(
     rag_service: Annotated[RagService, Depends(get_rag_service)],
 ):
     return rag_service.answer_from_documents(request_body.prompt)
+
+
+@router.post("/ask/stream", response_class=EventSourceResponse)
+async def stream_answer_about_existing_documents(
+    request_body: PromptRequest,
+    rag_service: Annotated[RagService, Depends(get_rag_service)],
+) -> AsyncIterable[ServerSentEvent]:
+    async for event, data in rag_service.stream_answer_from_documents(request_body.prompt):
+        yield ServerSentEvent(data=data, event=event)
 
 
 @router.post("/upload", response_model=UploadSuccess)
