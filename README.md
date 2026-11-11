@@ -6,7 +6,8 @@
 
 ```bash
 cd frontend
-# Todo
+npm install
+npm start
 ```
 
 ### Backend
@@ -25,3 +26,5 @@ In the second terminal, run these commands:
 cd backend
 uv run start
 ```
+
+docker compose up --watch

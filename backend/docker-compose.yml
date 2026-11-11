@@ -1,0 +1,21 @@
+name: documentation-digester-backend
+services:
+  documentation-digester-backend:
+    container_name: documentation-digester-backend
+    build:
+      context: .
+    environment:
+      - OLLAMA_BASE_URL
+      - OLLAMA_LLM_MODEL
+      - OLLAMA_EMBEDDING_MODEL
+    ports:
+      - 8000:8000
+    volumes:
+      - ./data:/app/data
+    develop:
+      watch:
+        - action: sync
+          path: ./src
+          target: /app/src
+        - action: rebuild
+          path: ./uv.lock

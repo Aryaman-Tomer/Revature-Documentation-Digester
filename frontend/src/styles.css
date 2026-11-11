@@ -1,0 +1,35 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import 'tailwindcss';
+
+:root {
+  color-scheme: light;
+  /* Godot palette: logo blue #478cbf, logo gray #414042, editor dark-blue base */
+  --bg: #ffffff;
+  --surface: #eef2f7;
+  --text: #414042;
+  --primary: #478cbf;
+}
+
+:root.dark {
+  color-scheme: dark;
+  --bg: #202531;
+  --surface: #2a303e;
+  --text: #e0e0e0;
+  --primary: #478cbf;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+/* Theme wave: JS animates ::view-transition-new(root) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
