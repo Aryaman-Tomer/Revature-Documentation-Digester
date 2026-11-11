@@ -134,6 +134,7 @@ export class App {
       });
     });
     effect(() => {
+      if (this.loading()) return; // don't write storage on every streamed token
       // only answered turns are stored: errors and in-flight questions are transient
       const messages = this.messages()
         .filter((m) => m.answer)
@@ -245,9 +246,16 @@ export class App {
         await this.http.upload(file);
         this.patch(i, { file: undefined }); // uploaded once; retries skip it
       }
-      this.patch(i, { answer: await this.http.ask(question) });
+      let sources: RagResponse['sources'] = []; // shown only once the stream is done
+      await this.http.askStream(question, ({ event, data }) => {
+        const cur = this.messages()[i].answer ?? { response: '', sources: [] };
+        if (event === 'sources') sources = data.sources;
+        else if (event === 'token') this.patch(i, { answer: { ...cur, response: cur.response + data.token } });
+        else this.patch(i, { answer: { ...cur, sources } });
+      });
     } catch (e) {
-      this.patch(i, { error: e instanceof Error ? e.message : 'Something went wrong.' });
+      // answer cleared so a half-streamed reply is neither shown nor persisted
+      this.patch(i, { answer: undefined, error: e instanceof Error ? e.message : 'Something went wrong.' });
     } finally {
       this.loading.set(false);
     }

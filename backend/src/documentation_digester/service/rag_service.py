@@ -1,4 +1,5 @@
 import json
+from collections.abc import AsyncIterator
 from typing import TypedDict
 
 from langchain_chroma import Chroma
@@ -44,17 +45,39 @@ class RagService:
         )
         self.chain = self.prompt_template | self.llm | StrOutputParser()
 
-    def answer_from_documents(self, prompt: str, k: int = 5) -> RagResponse:
-        retrieved_chunks = self.chroma.similarity_search(prompt, k=k)
-        transformed_chunks = [
+    @staticmethod
+    def _to_sources(chunks) -> list[dict[str, str]]:
+        return [
             {
                 "filename": chunk.metadata.get("filename", "Unknown"),
                 "page": str(chunk.metadata.get("page", "N/A")),
                 "chunk_index": str(chunk.metadata.get("chunk_index", "Unknown")),
                 "content": chunk.page_content,
             }
-            for chunk in retrieved_chunks
+            for chunk in chunks
         ]
+
+    def _chain_inputs(self, prompt: str, sources: list[dict[str, str]]) -> dict:
+        return {
+            "context": "\n---\n".join(json.dumps(s) for s in sources),
+            "prompt": prompt,
+            "fallback_text": self.NO_CONTEXT_FALLBACK,
+        }
+
+    async def stream_answer_from_documents(self, prompt: str, k: int = 5) -> AsyncIterator[tuple[str, dict]]:
+        sources = self._to_sources(await self.chroma.asimilarity_search(prompt, k=k))
+        yield "sources", {"sources": sources}
+        if not sources:
+            yield "token", {"token": self.NO_CONTEXT_FALLBACK}
+            yield "done", {}
+            return
+        async for token in self.chain.astream(self._chain_inputs(prompt, sources)):
+            yield "token", {"token": token}
+        yield "done", {}
+
+    def answer_from_documents(self, prompt: str, k: int = 5) -> RagResponse:
+        retrieved_chunks = self.chroma.similarity_search(prompt, k=k)
+        transformed_chunks = self._to_sources(retrieved_chunks)
 
         if not retrieved_chunks:
             return {
