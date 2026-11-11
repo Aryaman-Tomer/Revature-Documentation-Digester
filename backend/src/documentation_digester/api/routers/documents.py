@@ -4,10 +4,9 @@ from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from langchain_chroma import Chroma
 from langchain_core.language_models import BaseChatModel
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy.orm import Session
 
-from documentation_digester.repository.fake_user_story_repository import (
-    FakeUserStoryRepository,
-)
+from documentation_digester.repository.user_story_repo import UserStoryRepo
 from documentation_digester.service.document_service import (
     DocumentService,
     DocumentValidationError,
@@ -19,6 +18,7 @@ from documentation_digester.service.search_service import (
     SearchResponse,
     SearchService,
     UserStoriesNotFoundError,
+    UserStoryRepository,
 )
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
@@ -53,11 +53,23 @@ def get_document_service(
 ) -> DocumentService:
     return DocumentService(chroma=chroma)
 
+
+def get_story_store(request: Request) -> Chroma:
+    return request.app.state.story_store
+
+
+def get_user_story_repo(
+    db: Session = Depends(get_db),
+    story_store: Chroma = Depends(get_story_store),
+) -> UserStoryRepository:
+    return UserStoryRepo(db, story_store)
+
+
 def get_search_service(
     chroma: Annotated[Chroma, Depends(get_chroma)],
+    user_stories: Annotated[UserStoryRepository, Depends(get_user_story_repo)],
 ) -> SearchService:
-    # TODO: replace the fake with the real repository once it exists.
-    return SearchService(chroma=chroma, user_stories=FakeUserStoryRepository())
+    return SearchService(chroma=chroma, user_stories=user_stories)
 
 
 @router.post("/ask", response_model=RagResponse)
