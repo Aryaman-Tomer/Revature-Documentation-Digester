@@ -72,8 +72,15 @@ def get_search_service(
     return SearchService(chroma=chroma, user_stories=user_stories)
 
 
+@router.get("/")
+def get_all_uploaded_document_names(
+    document_service: Annotated[DocumentService, Depends(get_document_service)],
+):
+    return document_service.get_all_files()
+
+
 @router.post("/ask", response_model=RagResponse)
-def ask(
+def ask_questions_about_existing_documents(
     request_body: PromptRequest,
     rag_service: Annotated[RagService, Depends(get_rag_service)],
 ):
@@ -92,7 +99,7 @@ def search(
 
 
 @router.post("/upload", response_model=UploadSuccess)
-def upload(
+def upload_a_document(
     file: Annotated[UploadFile, File(...)],
     document_service: Annotated[DocumentService, Depends(get_document_service)],
 ):
@@ -100,3 +107,11 @@ def upload(
         return document_service.upload_document(file)
     except DocumentValidationError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete("/{file_name}")
+def delete_an_uploaded_document(
+    file_name: str,
+    document_service: Annotated[DocumentService, Depends(get_document_service)],
+):
+    return document_service.delete_file(file_name)

@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI):
     app.state.llm = ChatOllama(
         model=settings.OLLAMA_LLM_MODEL,
         base_url=settings.OLLAMA_BASE_URL,
-        temperature=0,
+        temperature=settings.TEMPERATURE,
         keep_alive="10m",
     )
     app.state.embeddings = OllamaEmbeddings(

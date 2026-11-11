@@ -44,5 +44,4 @@ ENV UV_CACHE_DIR=/tmp/uv-cache
 
 EXPOSE 8000
 
-# Run FastAPI directly using uvicorn or python since dependencies are pre-installed
-CMD ["uv", "run", "start"]
+CMD ["uvicorn", "src.documentation_digester.api.main:app", "--host", "0.0.0.0", "--reload"]
