@@ -1,6 +1,9 @@
 from typing import Annotated
 
+from collections.abc import AsyncIterable
+
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
+from fastapi.sse import EventSourceResponse, ServerSentEvent
 from langchain_chroma import Chroma
 from langchain_core.language_models import BaseChatModel
 from pydantic import BaseModel, ConfigDict, Field
@@ -87,15 +90,13 @@ def ask_questions_about_existing_documents(
     return rag_service.answer_from_documents(request_body.prompt)
 
 
-@router.post("/search", response_model=SearchResponse)
-def search(
-    request_body: SearchRequest,
-    search_service: Annotated[SearchService, Depends(get_search_service)],
-):
-    try:
-        return search_service.search(request_body.question, request_body.k)
-    except (DocumentsNotFoundError, UserStoriesNotFoundError) as e:
-        raise HTTPException(status_code=404, detail=str(e))
+@router.post("/ask/stream", response_class=EventSourceResponse)
+async def stream_answer_about_existing_documents(
+    request_body: PromptRequest,
+    rag_service: Annotated[RagService, Depends(get_rag_service)],
+) -> AsyncIterable[ServerSentEvent]:
+    async for event, data in rag_service.stream_answer_from_documents(request_body.prompt):
+        yield ServerSentEvent(data=data, event=event)
 
 
 @router.post("/upload", response_model=UploadSuccess)
