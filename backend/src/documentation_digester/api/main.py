@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
     app.state.story_store = Chroma(
         collection_name="user_stories",
         embedding_function=app.state.embeddings,
-        persist_directory=(settings.CHROMA_DIRECTORY), 
+        persist_directory=str(settings.CHROMA_DIRECTORY), 
     )
 
     yield

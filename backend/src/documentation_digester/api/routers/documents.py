@@ -9,6 +9,7 @@ from langchain_core.language_models import BaseChatModel
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
+from documentation_digester.db.database import get_db
 from documentation_digester.repository.user_story_repo import UserStoryRepo
 from documentation_digester.service.document_service import (
     DocumentService,
