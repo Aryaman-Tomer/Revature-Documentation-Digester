@@ -11,6 +11,8 @@ load_dotenv()
 
 
 class Settings(BaseModel):
+    DATABASE_URL: str
+    DEBUG: bool = False 
     OLLAMA_BASE_URL: str
     OLLAMA_LLM_MODEL: str
     OLLAMA_EMBEDDING_MODEL: str
@@ -26,6 +28,7 @@ class Settings(BaseModel):
 
 
 settings = Settings(
+    DATABASE_URL=os.getenv("DATABASE_URL"),
     OLLAMA_BASE_URL=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
     OLLAMA_LLM_MODEL=os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b"),
     OLLAMA_EMBEDDING_MODEL=os.getenv(
