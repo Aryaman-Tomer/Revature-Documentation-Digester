@@ -1,4 +1,5 @@
 from langchain_chroma import Chroma
+from langchain_core.documents import Document
 from sqlalchemy import select
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import Session
@@ -44,5 +45,21 @@ class UserStoryRepo:
         stories_by_id = {story.id: story for story in rows}
 
         return [stories_by_id[story_id] for story_id in ids if story_id in stories_by_id]
+
+    def index_all(self) -> int:
+        stories = self.get_all()
+
+        docs=[
+            Document(
+                page_content=f"{story.title}\n\n{story.text}\n\nAcceptance criteria:\n{story.acceptance_criteria}",
+                metadata={"story_id": story.id},
+            )
+            for story in stories
+        ]
+        ids = [str(story.id) for story in stories]
+        if docs:
+            self.story_store.add_documents(docs, ids=ids)
+
+        return len(docs)
 
     

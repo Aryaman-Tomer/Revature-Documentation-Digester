@@ -133,6 +133,17 @@ async def stream_answer_about_existing_documents(
         yield ServerSentEvent(data=data, event=event)
 
 
+@router.post("/search", response_model=SearchResponse)
+def search(
+    request_body: SearchRequest,
+    search_service: Annotated[SearchService, Depends(get_search_service)],
+):
+    try:
+        return search_service.search(request_body.question, request_body.k)
+    except (DocumentsNotFoundError, UserStoriesNotFoundError) as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
 @router.post("/upload", response_model=UploadSuccess)
 def upload_a_document(
     file: Annotated[UploadFile, File(...)],
