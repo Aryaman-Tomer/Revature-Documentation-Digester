@@ -7,6 +7,7 @@ from langchain_chroma import Chroma
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 
 from documentation_digester.api.routers.documents import router as documents_router
+from documentation_digester.api.routers.user_stories import router as user_stories_router
 from documentation_digester.config.settings import settings
 
 
@@ -44,6 +45,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(documents_router)
+app.include_router(user_stories_router)
 
 app.add_middleware(
     CORSMiddleware,
