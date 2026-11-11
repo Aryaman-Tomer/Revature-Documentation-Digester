@@ -1,4 +1,4 @@
-# Documentation-Digester
+# Documentation Digester
 
 ## Todo
 
@@ -18,6 +18,15 @@ This repository holds the final project for our Revature Java Full Stack Enginee
 
 - No conversational history.
 - The LLM doesn't have access to the internet.
+
+### Tech Stack
+
+- Python
+- FastAPI
+- LangChain
+- Chroma
+- Angular
+- Ollama
 
 ## Local Development Setup
 
