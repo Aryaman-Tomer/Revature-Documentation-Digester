@@ -6,12 +6,18 @@ from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from langchain_chroma import Chroma
 from langchain_core.language_models import BaseChatModel
+from langchain_experimental.text_splitter import SemanticChunker
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
+
 from documentation_digester.db.database import get_db
 from documentation_digester.repository.user_story_repo import UserStoryRepo
+from documentation_digester.config.settings import settings
+
 from documentation_digester.service.document_service import (
+    ChunkerProtocol,
     DocumentService,
     DocumentValidationError,
     UploadSuccess,
@@ -41,6 +47,24 @@ def get_chroma(request: Request) -> Chroma:
     return request.app.state.chroma
 
 
+def get_chunker(request: Request) -> ChunkerProtocol:
+    if settings.CHUNKING_STRATEGY == "text_splitter":
+        return RecursiveCharacterTextSplitter(
+            chunk_size=settings.TEXT_SPLITTER_CHUNK_SIZE,
+            chunk_overlap=settings.TEXT_SPLITTER_CHUNK_OVERLAP,
+            add_start_index=True,
+        )
+    elif settings.CHUNKING_STRATEGY == "semantic":
+        return SemanticChunker(
+            embeddings=request.app.state.embeddings,
+            breakpoint_threshold_type="percentile",
+            breakpoint_threshold_amount=settings.SEMANTIC_CHUNKER_BREAKPOINT_THRESHOLD,
+            add_start_index=True,
+        )
+    else:
+        raise ValueError(f"Invalid chunking strategy: {settings.CHUNKING_STRATEGY}.")
+
+
 def get_llm_model(request: Request) -> BaseChatModel:
     return request.app.state.llm
 
@@ -54,8 +78,9 @@ def get_rag_service(
 
 def get_document_service(
     chroma: Annotated[Chroma, Depends(get_chroma)],
+    chunker: Annotated[ChunkerProtocol, Depends(get_chunker)],
 ) -> DocumentService:
-    return DocumentService(chroma=chroma)
+    return DocumentService(chroma, chunker)
 
 
 def get_story_store(request: Request) -> Chroma:
@@ -76,11 +101,19 @@ def get_search_service(
     return SearchService(chroma=chroma, user_stories=user_stories)
 
 
-@router.get("/")
+@router.get("/names")
 def get_all_uploaded_document_names(
     document_service: Annotated[DocumentService, Depends(get_document_service)],
 ):
     return document_service.get_all_files()
+
+
+@router.get("/chunks")
+def get_all_chunks(
+    document_service: Annotated[DocumentService, Depends(get_document_service)],
+    truncate: int = 50,
+):
+    return document_service.get_all_chunks(truncate)
 
 
 @router.post("/ask", response_model=RagResponse)

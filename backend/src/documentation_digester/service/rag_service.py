@@ -3,6 +3,7 @@ from collections.abc import AsyncIterator
 from typing import TypedDict
 
 from langchain_chroma import Chroma
+from langchain_core.documents import Document
 from langchain_core.language_models import BaseChatModel
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import (
@@ -46,7 +47,7 @@ class RagService:
         self.chain = self.prompt_template | self.llm | StrOutputParser()
 
     @staticmethod
-    def _to_sources(chunks) -> list[dict[str, str]]:
+    def _to_sources(chunks: list[Document]) -> list[dict[str, str]]:
         return [
             {
                 "filename": chunk.metadata.get("filename", "Unknown"),
@@ -57,22 +58,31 @@ class RagService:
             for chunk in chunks
         ]
 
-    def _chain_inputs(self, prompt: str, sources: list[dict[str, str]]) -> dict:
+    def _chain_inputs(
+        self, prompt: str, sources: list[dict[str, str]]
+    ) -> dict[str, str]:
         return {
             "context": "\n---\n".join(json.dumps(s) for s in sources),
             "prompt": prompt,
             "fallback_text": self.NO_CONTEXT_FALLBACK,
         }
 
-    async def stream_answer_from_documents(self, prompt: str, k: int = 5) -> AsyncIterator[tuple[str, dict]]:
-        sources = self._to_sources(await self.chroma.asimilarity_search(prompt, k=k))
+    async def stream_answer_from_documents(
+        self, prompt: str, k: int = 5
+    ) -> AsyncIterator[tuple[str, dict[str, str | list[dict[str, str]]]]]:
+        retrieved_chunks = await self.chroma.asimilarity_search(prompt, k=k)
+        sources = self._to_sources(retrieved_chunks)
+
         yield "sources", {"sources": sources}
+
         if not sources:
             yield "token", {"token": self.NO_CONTEXT_FALLBACK}
             yield "done", {}
             return
+
         async for token in self.chain.astream(self._chain_inputs(prompt, sources)):
             yield "token", {"token": token}
+
         yield "done", {}
 
     def answer_from_documents(self, prompt: str, k: int = 5) -> RagResponse:

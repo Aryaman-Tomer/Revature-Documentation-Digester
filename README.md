@@ -1,16 +1,32 @@
-# Documentation-Digester
+# Documentation Digester
 
 ## Todo
 
-- [ ] Write the **About** section.
-- [ ] Update the GitHub project description.
-- [ ] Add a social preview image.
+- [ ] Restructure the project files.
 - [ ] Dockerize the entire repo (including frontend and Ollama).
-- [ ] Remove this **Todo** section.
 
 ## About
 
-⚠️ TODO ⚠️
+This repository holds the final project for our Revature Java Full Stack Engineering training. This is a simple RAG application that integrates a FastAPI backend, an Angular frontend, a Chroma vector database, and a local Ollama server.
+
+### Features
+
+- Document uploading.
+- Different chunking strategies (by character count or by semantic meaning).
+
+### Limitations
+
+- No conversational history.
+- The LLM doesn't have access to the internet.
+
+### Tech Stack
+
+- Python
+- FastAPI
+- LangChain
+- Chroma
+- Angular
+- Ollama
 
 ## Local Development Setup
 

@@ -2,12 +2,12 @@ import os
 import shutil
 import tempfile
 import uuid
-from typing import TypedDict
+from typing import Any, Protocol, TypedDict
 
 from fastapi import UploadFile
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
 
 from documentation_digester.config.settings import settings
 
@@ -22,20 +22,14 @@ class UploadSuccess(TypedDict):
     chunks_created: int
 
 
-class DocumentSummary(TypedDict):
-    document_id: str
-    filename: str
-    total_chunks: int
+class ChunkerProtocol(Protocol):
+    def split_documents(self, documents: list[Document]) -> list[Document]: ...
 
 
 class DocumentService:
-    def __init__(self, chroma: Chroma):
+    def __init__(self, chroma: Chroma, chunker: ChunkerProtocol):
         self.chroma = chroma
-        self.splitter = RecursiveCharacterTextSplitter(
-            chunk_size=settings.CHUNK_SIZE,
-            chunk_overlap=settings.CHUNK_OVERLAP,
-            add_start_index=True,
-        )
+        self.chunker = chunker
 
     def delete_file(self, file_name: str) -> bool:
         result = self.chroma.get(where={"filename": file_name})
@@ -51,6 +45,24 @@ class DocumentService:
         metadatas = self.chroma.get(include=["metadatas"])["metadatas"]
         unique_files = {m["filename"] for m in metadatas}
         return unique_files
+
+    def get_all_chunks(self, truncate: int) -> list[dict[str, Any]]:
+        data = self.chroma.get(include=["documents", "metadatas"])
+        documents = data["documents"]
+        metadatas = data["metadatas"]
+        result = [
+            {
+                "filename": metadata["filename"],
+                "chunk_index": metadata["chunk_index"],
+                "start_index": metadata["start_index"],
+                "content_length": len(document),
+                "content": f"{document[:truncate]}..."
+                if len(document) > truncate
+                else document,
+            }
+            for document, metadata in zip(documents, metadatas)
+        ]
+        return result
 
     def upload_document(self, file: UploadFile) -> UploadSuccess:
         filename = os.path.basename(file.filename or "")
@@ -81,7 +93,7 @@ class DocumentService:
                     )
 
             document = loader.load()
-            chunks = self.splitter.split_documents(document)
+            chunks = self.chunker.split_documents(document)
 
             if not chunks:
                 raise DocumentValidationError(
