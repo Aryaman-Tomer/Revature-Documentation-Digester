@@ -73,6 +73,28 @@ uv run start
 > [!TIP]
 > If your linter isn't picking up the installed dependencies properly in VS Code, try opening up the `backend` folder directly instead of the project root. (Unfortunately this trick still won't work for Intel-based Macs because you won't be able to install the dependencies in the first place.)
 
+### Postgres Setup
+
+User stories are stored in Postgres. `backend/db/schema.sql` creates the `user_stories` table and `backend/db/seed.sql` fills it with example stories (signals, nodes, scenes). Both are safe to re-run.
+
+Make sure Docker is running, then run:
+
+```bash
+cd backend/db
+docker compose up -d
+```
+
+The first start creates the database and loads both files. Then copy `backend/.env.example` to `backend/.env` and set `DATABASE_URL` to:
+
+```env
+DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/documentation_digester
+```
+
+> [!TIP]
+> If port 5432 is already in use, set `POSTGRES_PORT` (for example `5434`) before `docker compose up -d` and use that port in `DATABASE_URL`. To reset the data, run `docker compose down -v`.
+>
+> Without Docker, load the files into your own Postgres with `psql -U postgres -d documentation_digester -f backend/db/schema.sql` and then the same for `seed.sql`.
+
 ### Ollama Setup
 
 Make sure you have [Ollama](https://ollama.com/download) installed first. Then run the following in your terminal:
