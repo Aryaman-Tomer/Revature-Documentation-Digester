@@ -240,6 +240,7 @@ export class App {
 
   private async run(i: number): Promise<void> {
     this.loading.set(true);
+    const chatId = this.chatId; // captured: the user may switch chats while this streams
     try {
       const { question, file } = this.messages()[i];
       if (file) {
@@ -247,7 +248,7 @@ export class App {
         this.patch(i, { file: undefined }); // uploaded once; retries skip it
       }
       let sources: RagResponse['sources'] = []; // shown only once the stream is done
-      await this.http.askStream(question, ({ event, data }) => {
+      await this.http.askStream(question, chatId, ({ event, data }) => {
         const cur = this.messages()[i].answer ?? { response: '', sources: [] };
         if (event === 'sources') sources = data.sources;
         else if (event === 'token') this.patch(i, { answer: { ...cur, response: cur.response + data.token } });
