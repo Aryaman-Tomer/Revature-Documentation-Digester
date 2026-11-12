@@ -1,11 +1,15 @@
 import json
 from collections.abc import AsyncIterator
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import HumanMessage
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnableConfig
+from langgraph.graph.state import CompiledStateGraph
+from starlette.concurrency import iterate_in_threadpool
 from langchain_core.prompts import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,
@@ -82,6 +86,36 @@ class RagService:
 
         async for token in self.chain.astream(self._chain_inputs(prompt, sources)):
             yield "token", {"token": token}
+
+        yield "done", {}
+
+    async def stream_answer_with_memory(
+        self,
+        prompt: str,
+        thread_id: str,
+        graph: CompiledStateGraph[Any, Any, Any, Any],
+        k: int = 5,
+    ) -> AsyncIterator[tuple[str, dict[str, str | list[dict[str, str]]]]]:
+        sources = self._to_sources(await self.chroma.asimilarity_search(prompt, k=k))
+        yield "sources", {"sources": sources}
+
+        if not sources:
+            yield "token", {"token": self.NO_CONTEXT_FALLBACK}
+            yield "done", {}
+            return
+
+        inputs = {
+            "messages": [HumanMessage(prompt)],
+            "context": "\n---\n".join(json.dumps(s) for s in sources),
+        }
+        config: RunnableConfig = {"configurable": {"thread_id": thread_id}}
+        # PostgresSaver is sync-only, so run the blocking graph.stream in a worker thread.
+        # The memory-update node also calls the LLM, so only forward the answer node's tokens.
+        async for chunk, meta in iterate_in_threadpool(
+            graph.stream(inputs, config, stream_mode="messages")
+        ):
+            if meta["langgraph_node"] == "answer" and isinstance(chunk.content, str):
+                yield "token", {"token": chunk.content}
 
         yield "done", {}
 

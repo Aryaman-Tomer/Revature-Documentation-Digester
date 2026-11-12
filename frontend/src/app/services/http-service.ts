@@ -40,11 +40,11 @@ export class HttpService {
     return send('/upload', { body });
   }
 
-  /** Reads the SSE stream from /ask/stream, calling `onEvent` per event. */
-  async askStream(prompt: string, onEvent: (e: StreamEvent) => void): Promise<void> {
-    const res = await post('/ask/stream', {
+  /** Reads the SSE stream from /ask/stream/memory (chatId = backend thread_id), calling `onEvent` per event. */
+  async askStream(prompt: string, chatId: string, onEvent: (e: StreamEvent) => void): Promise<void> {
+    const res = await post('/ask/stream/memory', {
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ prompt, thread_id: chatId }),
     });
     const reader = res.body!.pipeThrough(new TextDecoderStream()).getReader();
     let buf = '';

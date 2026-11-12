@@ -43,6 +43,10 @@ class PromptRequest(BaseModel):
     prompt: str = Field(min_length=1, max_length=1000)
 
 
+class MemoryPromptRequest(PromptRequest):
+    thread_id: str = Field(min_length=1, max_length=100)
+
+
 def get_chroma(request: Request) -> Chroma:
     return request.app.state.chroma
 
@@ -130,6 +134,18 @@ async def stream_answer_about_existing_documents(
     rag_service: Annotated[RagService, Depends(get_rag_service)],
 ) -> AsyncIterable[ServerSentEvent]:
     async for event, data in rag_service.stream_answer_from_documents(request_body.prompt):
+        yield ServerSentEvent(data=data, event=event)
+
+
+@router.post("/ask/stream/memory", response_class=EventSourceResponse)
+async def stream_answer_with_memory(
+    request_body: MemoryPromptRequest,
+    request: Request,
+    rag_service: Annotated[RagService, Depends(get_rag_service)],
+) -> AsyncIterable[ServerSentEvent]:
+    async for event, data in rag_service.stream_answer_with_memory(
+        request_body.prompt, request_body.thread_id, request.app.state.memory_graph
+    ):
         yield ServerSentEvent(data=data, event=event)
 
 
