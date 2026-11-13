@@ -13,10 +13,10 @@ This repository holds the final project for our Revature Java Full Stack Enginee
 
 - Document uploading.
 - Different chunking strategies (by character count or by semantic meaning).
+- Chat answers with source chunks. Each chat keeps its own history in Postgres.
 
 ### Limitations
 
-- No conversational history.
 - The LLM doesn't have access to the internet.
 
 ### Tech Stack
@@ -25,6 +25,7 @@ This repository holds the final project for our Revature Java Full Stack Enginee
 - FastAPI
 - LangChain
 - Chroma
+- PostgreSQL
 - Angular
 - Ollama
 
