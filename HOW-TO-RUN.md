@@ -94,7 +94,7 @@ Type a question and press Send. A question such as “How do I use signals to co
 
 ## 6. Load the sample Godot docs
 
-Supported uploads are `.txt`, `.rst`, `.md`, and `.pdf`. `.docx` is rejected.
+Supported uploads are `.txt`, `.rst`, `.md`, `.pdf`, and `.docx`.
 
 From the chat page, use **Upload text file** and pick files in `data/samples/`:
 

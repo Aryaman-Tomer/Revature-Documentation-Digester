@@ -5,6 +5,7 @@ services:
     build:
       context: .
     environment:
+      - DATABASE_URL
       - OLLAMA_BASE_URL
       - OLLAMA_LLM_MODEL
       - OLLAMA_EMBEDDING_MODEL

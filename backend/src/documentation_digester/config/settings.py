@@ -19,7 +19,7 @@ class Settings(BaseModel):
     TEMPERATURE: float = 0.3
 
     CHROMA_DIRECTORY: Path = PATHS.ROOT_DIRECTORY / "data" / "chroma"
-    SUPPORTED_EXTENSIONS: set[str] = {".txt", ".rst", ".md", ".pdf"}
+    SUPPORTED_EXTENSIONS: set[str] = {".txt", ".rst", ".md", ".pdf", ".docx"}
 
     CHUNKING_STRATEGY: Literal["semantic", "text_splitter"] = "semantic"
     TEXT_SPLITTER_CHUNK_SIZE: int = 1000

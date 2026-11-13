@@ -59,8 +59,11 @@ uv run start
 > The Python dependencies resolve just fine on Windows, Linux, and Apple Silicon Macs. Intel-based Macs aren't compatible for some reason. A (not-so-ideal) workaround is to run the backend in a Docker container. The first step is to create a new environment file at `./backend/.env` with the following:
 >
 > ```env
+> DATABASE_URL=postgresql+psycopg://postgres:postgres@host.docker.internal:5432/documentation_digester
 > OLLAMA_BASE_URL=http://host.docker.internal:11434
 > ```
+>
+> `host.docker.internal` is the machine running Docker. `localhost` inside the container is the container itself, so the API cannot reach Postgres or Ollama that way.
 >
 > Next, make sure your Docker daemon is running by opening the Docker app. Then run the following commands:
 >
